@@ -41,16 +41,26 @@ anova (fit0, fit1)
 
 # are the p-values well calibrated? Test the above by sampling:
 
-permute_and_fit <- function(df) {
-  permuted_y <- sample(y$normalized.log2fold)
-  fit0 <- lm(permuted_y ~ specific.states +  high + mut.b6.strict, data = df)
-  fit1 <- lm(permuted_y ~ specific.states +  high + mut.b6.strict + high:mut.b6.strict, data = df)
+permute_and_fit <- function(df) {	
+# Extract unique gene names from the data frame
+gene_names <- unique(df$gene)
+# Extract corresponding values from the 'normalized.log2fold' column
+values <- df$normalized.log2fold
+# Create the lookup table
+lookup_table <- setNames(values, gene_names)
+gene_names <- names(lookup_table)
+# Randomly shuffle the values in the lookup table
+shuffled_values <- sample(lookup_table)
+# Create a new lookup table with shuffled values
+shuffled_lookup_table <- setNames(shuffled_values, gene_names)
+df$values <- shuffled_lookup_table[df$gene]
+# run the two linear models and report back the P-value
+ fit0 <- lm(values ~ specific.states +  high + mut.b6.strict, data = df)
+  fit1 <- lm(values~ specific.states +  high + mut.b6.strict + high:mut.b6.strict, data = df)
   a = anova(fit0,fit1)
   p_value <- a$"Pr(>F)"[2]
   return(p_value)
 }
-
-
 
 
 
